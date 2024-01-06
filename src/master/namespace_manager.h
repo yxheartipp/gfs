@@ -46,7 +46,7 @@ class Namespace_Manager {
   void split_path(const std::string& path, std::vector<std::string>* all_paths);
 
   status_code lockparent(const std::vector<std::string>& path,
-                         FileTreeNode*& father);
+                         std::shared_ptr<FileTreeNode>& father);
 
   status_code unlockparent(const std::vector<std::string>& path);
 

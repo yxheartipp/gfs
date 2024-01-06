@@ -42,8 +42,9 @@ void Namespace_Manager::split_path(const std::string& path,
   all_paths->push_back(path.substr(start, end));
 }
 
-status_code Namespace_Manager::lockparent(const std::vector<std::string>& path,
-                                          FileTreeNode*& father) {
+status_code Namespace_Manager::lockparent(
+    const std::vector<std::string>& path,
+    std::shared_ptr<FileTreeNode>& father) {
   std::shared_lock<std::shared_mutex> lock(root->lock_);
   FileTreeNode* current = root.get();
 
@@ -55,7 +56,7 @@ status_code Namespace_Manager::lockparent(const std::vector<std::string>& path,
     }
     current = it->second.get();
     current->lock();
-    father = current;
+    father.reset(current, [current](FileTreeNode*) { current->unlock(); });
   }
   return SUCCESS;
 }
@@ -80,7 +81,7 @@ status_code Namespace_Manager::createfile(const std::string& path) {
   split_path(path, &dir_path);
   std::string file_name = dir_path.back();
   dir_path.pop_back();
-  FileTreeNode* father_node;
+  std::shared_ptr<FileTreeNode> father_node = nullptr;
   if (dir_path.size() != 0) {
     auto s = lockparent(dir_path, father_node);
     if (s != SUCCESS) {
@@ -88,7 +89,7 @@ status_code Namespace_Manager::createfile(const std::string& path) {
       return s;
     }
   } else {
-    father_node = root.get();
+    father_node = root;
   }
   if (father_node->children.find(file_name) != father_node->children.end()) {
     unlockparent(dir_path);
@@ -105,7 +106,7 @@ status_code Namespace_Manager::createfile(const std::string& path) {
 status_code Namespace_Manager::createdir(const std::string& path) {
   std::vector<std::string> dir_path;
   split_path(path, &dir_path);
-  FileTreeNode* father_node = nullptr;
+  std::shared_ptr<FileTreeNode> father_node = nullptr;
   std::string dir_name;
   dir_name = dir_path.back();
   dir_path.pop_back();
@@ -116,7 +117,7 @@ status_code Namespace_Manager::createdir(const std::string& path) {
       return s;
     }
   } else {
-    father_node = root.get();
+    father_node = root;
   }
   if (father_node->children.find(dir_name) != father_node->children.end()) {
     unlockparent(dir_path);
