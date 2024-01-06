@@ -39,16 +39,18 @@ TEST(Namespace_ManagerTest, CreateFile) {
   ASSERT_EQ(s, PATH_NOT_FOUND);
 }
 
-// TEST(Namespace_ManagerTest, CreateDir) {
-//   Namespace_Manager nm;
-//   std::string input_dir = "/src/test/";
-//   status_code s = nm.createdir(input_dir);
-//   ASSERT_EQ(s.value, 0);
-//   s = nm.createdir(input_dir);
-//   ASSERT_EQ(s.value, -1);
-//   std::string input_file_path = "/src/test/file.txt";
-//   s = nm.createfile(input_file_path);
-//   ASSERT_EQ(s.value, 0);
-// }
+TEST(Namespace_ManagerTest, CreateDir) {
+  Namespace_Manager nm;
+  std::string input_dir = "/src/test/";
+  status_code s = nm.createdir(input_dir);
+  ASSERT_EQ(s, PATH_NOT_FOUND);
+  s = nm.createdir("/src");
+  ASSERT_EQ(s, SUCCESS);
+  s = nm.createdir("/src/test/");
+  ASSERT_EQ(s, SUCCESS);
+  std::string input_file_path = "/src/test/file.txt";
+  s = nm.createfile(input_file_path);
+  ASSERT_EQ(s, SUCCESS);
+}
 
 }  // namespace gfs
