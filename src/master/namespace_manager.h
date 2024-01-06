@@ -3,9 +3,12 @@
 
 #include <cstdint>
 #include <map>
+#include <memory>
 #include <shared_mutex>
 #include <string>
 #include <vector>
+
+#include "state_code.h"
 
 namespace gfs {
 
@@ -15,21 +18,25 @@ class FileTreeNode {
   ~FileTreeNode() = default;
 
   bool IsDir;
-  std::map<std::string, FileTreeNode*> children;
+  // std::map<std::string, std::shared_ptr<FileTreeNode>> children;
 
+  std::map<std::string, std::shared_ptr<FileTreeNode>> children;
   uint64_t length;
   uint64_t chunks;
 
-  void lock() { lock_.lock(); }
-  void unlock() { lock_.unlock(); }
+  void lock() {  // lock_.lock();
+    lock_.lock_shared();
+  }
 
- private:
+  void wlock() { lock_.lock(); }
+
+  void unlock() { lock_.unlock(); }
   std::shared_mutex lock_;
 };
 
 class Namespace_Manager {
  private:
-  FileTreeNode* root;
+  std::shared_ptr<FileTreeNode> root;
   int serialCt;
 
  public:
@@ -37,6 +44,19 @@ class Namespace_Manager {
   ~Namespace_Manager();
 
   void split_path(const std::string& path, std::vector<std::string>* all_paths);
+
+  status_code lockparent(const std::vector<std::string>& path,
+                         FileTreeNode* father);
+
+  status_code unlockparent(const std::vector<std::string>& path);
+
+  status_code createdir(const std::string& path);
+
+  status_code deletedir(const std::string& path);
+
+  status_code createfile(const std::string& path);
+
+  status_code deletefile(const std::string& path);
 };
 
 }  // namespace gfs
