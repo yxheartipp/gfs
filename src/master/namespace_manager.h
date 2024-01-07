@@ -25,13 +25,14 @@ class FileTreeNode {
   uint64_t chunks;
 
   void lock() {  // lock_.lock();
-    lock_.lock_shared();
+    shared_lock_.lock();
   }
 
   void wlock() { lock_.lock(); }
 
   void unlock() { lock_.unlock(); }
   std::shared_mutex lock_;
+  std::shared_lock<std::shared_mutex> shared_lock_{lock_};
 };
 
 class Namespace_Manager {

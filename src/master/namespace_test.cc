@@ -17,17 +17,6 @@ TEST(Namespace_ManagerTest, Split_path) {
 }
 
 TEST(Namespace_ManagerTest, CreateFile) {
-  // Namespace_Manager nm;
-  // std::string input_path = "/dd/file.txt";
-
-  // status_code s = nm.createfile(input_path);
-  // ASSERT_EQ(s.value, -1);
-  // ASSERT_EQ(s.exception, "don't exist path");
-
-  // input_path = "/file.txt";
-  // s = nm.createfile(input_path);
-  // ASSERT_EQ(0, s.value);
-  // ASSERT_EQ(s.exception, "create file success");
   Namespace_Manager nm;
   std::string input_path = "/file.txt";
   auto s = nm.createfile(input_path);
@@ -50,6 +39,22 @@ TEST(Namespace_ManagerTest, CreateDir) {
   ASSERT_EQ(s, SUCCESS);
   std::string input_file_path = "/src/test/file.txt";
   s = nm.createfile(input_file_path);
+  ASSERT_EQ(s, SUCCESS);
+}
+
+TEST(Namespace_ManagerTest, DeleteDir) {
+  Namespace_Manager nm;
+  std::string input_dir = "/src";
+  auto s = nm.createdir(input_dir);
+  ASSERT_EQ(s, SUCCESS);
+  input_dir += "/test";
+  s = nm.createdir(input_dir);
+  ASSERT_EQ(s, SUCCESS);
+  s = nm.deletedir(input_dir);
+  ASSERT_EQ(s, SUCCESS);
+  s = nm.deletedir(input_dir);
+  ASSERT_EQ(s, PATH_NOT_FOUND);
+  s = nm.deletedir("/src");
   ASSERT_EQ(s, SUCCESS);
 }
 
