@@ -49,31 +49,31 @@ void Namespace_Manager::split_path(const std::string& path,
 status_code Namespace_Manager::lockparent(
     const std::vector<std::string>& path,
     std::shared_ptr<FileTreeNode>& father) {
-  FileTreeNode* current = root.get();
-  std::shared_lock<std::shared_mutex> gurad(current->lock_);
+  std::shared_ptr<FileTreeNode> current = root;
+  std::shared_lock<std::shared_mutex> guard(current->lock_);
   for (const auto& dir : path) {
     auto it = current->children.find(dir);
     if (it == current->children.end()) {
       std::cerr << "Error: Path not found." << std::endl;
       return PATH_NOT_FOUND;
     }
-    current = it->second.get();
-    std::shared_lock<std::shared_mutex> lock(current->lock_);
-    father.reset(current, [current](FileTreeNode*) {});
+    current = it->second;
+    current->wlock();
+    father = current;
   }
   return SUCCESS;
 }
 
 status_code Namespace_Manager::unlockparent(
     const std::vector<std::string>& path) {
-  FileTreeNode* current = root.get();
+  std::shared_ptr<FileTreeNode> current = root;
   for (const auto& dir : path) {
     auto it = current->children.find(dir);
     if (it == current->children.end()) {
       std::cerr << "Error: Path not found." << std::endl;
       return PATH_NOT_FOUND;
     }
-    current = it->second.get();
+    current = it->second;
     current->unlock();
   }
   return SUCCESS;
@@ -154,6 +154,7 @@ status_code Namespace_Manager::deletedir(const std::string& path) {
     unlockparent(dir_path);
     return PATH_NOT_FOUND;
   }
+  it->second->unlock();
   father_node->children.erase(it);
   auto s = unlockparent(dir_path);
   return s;
